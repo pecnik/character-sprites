@@ -1,0 +1,104 @@
+<html>
+<head>
+<title>Example</title>
+<style>
+html,
+body {
+    margin: 0;
+    padding: 16px;
+    background-color: cornflowerblue;
+    text-align: center;
+}
+.title {
+    font-family: "Comic Sans MS";
+    color: #fff;
+    font-size: 24px;
+}
+canvas {
+    background: cornflowerblue;
+}
+</style>
+</head>
+<body>
+    <div>
+        <div class="title">Animations</div>
+        <canvas id="my-canvas"></canvas>
+    </div>
+    <script>
+    (function () {
+
+        "use strict";
+
+        function loadImage (name, src) {
+            return new Promise(resolve => {
+                const image = new Image();
+                image.src = src;
+                image.onload = () => resolve({ name, image, src });
+            });
+        }
+
+        function drawSprite (ctx, sprite) {
+
+            const fps = 1000 / 12;
+            const frameCount = Math.floor(sprite.image.width / 32);
+            const frameIndex = Math.floor(Date.now() / fps) % frameCount;
+
+            const frame = { x: 0, y: 0, w: 32, h: 32 };
+            frame.x = 32 * frameIndex;
+
+            ctx.fillText(sprite.name, 40, 16);
+            ctx.drawImage(
+                sprite.image,
+                frame.x,
+                frame.y,
+                frame.w,
+                frame.h,
+                0,
+                0,
+                32,
+                32
+            )
+        }
+
+        Promise.all([
+            loadImage('idle', 'sprites/src/idle.png'),
+            loadImage('run', 'sprites/src/run.png'),
+            loadImage('fly', 'sprites/src/fly.png'),
+            loadImage('fall', 'sprites/src/fall.png'),
+            loadImage('land', 'sprites/src/land.png'),
+        ]).then(sprites => {
+
+            const canvas = document.getElementById('my-canvas');
+            const ctx    = canvas.getContext('2d');
+
+            canvas.width = 800;
+            canvas.height = 600;
+
+            ctx.scale(2, 2);
+            ctx.font = '8px Comic Sans MS';
+            ctx.fillStyle = '#fff';
+
+            [
+                'mozImageSmoothingEnabled',
+                'webkitImageSmoothingEnabled',
+                'msImageSmoothingEnabled',
+                'imageSmoothingEnabled',
+            ].forEach(smoothing => ctx[smoothing] = false);
+
+            requestAnimationFrame(function next () {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                sprites.forEach((sprite, index) => {
+                    ctx.save();
+                    ctx.translate(160, 32 + (32 + 8) * index);
+                    drawSprite(ctx, sprite);
+                    ctx.restore();
+                })
+
+                requestAnimationFrame(next);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
